@@ -1,14 +1,14 @@
-
 import os
 import requests
 import time
 import logging
+import json
 
 # Configure logging for better debugging
 logging.basicConfig(level=logging.INFO)
 
 # Set environment variables for your Discord webhook URL
-DISCORD_WEBHOOK_URL = os.getenv('https://discord.com/api/webhooks/1367789461093613580/v9mKlPyYhbmIAYHGraP7Wt4y2JwOTKFjYVIdyEshUDqmc1quVAOopeCqWUO4OCzsEkid')  # Ensure this is set in your Vercel environment variables
+DISCORD_WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL')  # Ensure this is set in your Vercel environment variables
 API_URL = 'https://trex-beryl.vercel.app/api/scores'
 CHECK_INTERVAL = 10  # Check every 10 seconds, you can change this if needed
 
@@ -32,14 +32,15 @@ def check_for_changes(last_data):
         response = requests.get(API_URL)
         response.raise_for_status()  # Raises an exception for 4xx/5xx responses
         current_data = response.json()
-        
+
         # Log the current data for debugging purposes
         logging.info(f"Current data from API: {current_data}")
         
-        # If the data has changed, send an update to Discord
-        if current_data != last_data:
+        # Compare current data with last data
+        if last_data is None or current_data != last_data:
             logging.info("Data has changed, sending update to Discord...")
-            send_to_discord(f"New scores update: {current_data}")
+            # If data has changed, send the new data to Discord
+            send_to_discord(f"New scores update: {json.dumps(current_data, indent=2)}")
             return current_data  # Return the updated data
         else:
             logging.info("No change in data.")
