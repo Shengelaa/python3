@@ -1,7 +1,0 @@
-{
-  "functions": {
-    "api/bot.py": {
-      "schedule": "*/10 * * * *"  # Run every 10 minutes
-    }
-  }
-}
