@@ -1,6 +1,7 @@
 import requests
 import logging
 import json
+import os
 
 # Configure logging for better debugging
 logging.basicConfig(level=logging.INFO)
@@ -8,6 +9,9 @@ logging.basicConfig(level=logging.INFO)
 # Hardcode your Discord Webhook URL directly here
 DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1367789461093613580/v9mKlPyYhbmIAYHGraP7Wt4y2JwOTKFjYVIdyEshUDqmc1quVAOopeCqWUO4OCzsEkid"  # Replace this with your actual Discord webhook URL
 API_URL = 'https://trex-beryl.vercel.app/api/scores'
+
+# Define the file path for storing the last data
+LAST_DATA_FILE_PATH = '/tmp/last_data.json'
 
 # Function to send a message to Discord
 def send_to_discord(message):
@@ -21,6 +25,18 @@ def send_to_discord(message):
         logging.info("Message sent to Discord successfully.")
     except requests.exceptions.RequestException as e:
         logging.error(f"Error sending message to Discord: {e}")
+
+# Function to load the last known data from the file
+def load_last_data():
+    if os.path.exists(LAST_DATA_FILE_PATH):
+        with open(LAST_DATA_FILE_PATH, 'r') as file:
+            return json.load(file)
+    return None
+
+# Function to save the current data to the file
+def save_last_data(data):
+    with open(LAST_DATA_FILE_PATH, 'w') as file:
+        json.dump(data, file)
 
 # Function to check for changes in the API data
 def check_for_changes(last_data):
@@ -38,6 +54,7 @@ def check_for_changes(last_data):
             logging.info("Data has changed, sending update to Discord...")
             # If data has changed, send the new data to Discord
             send_to_discord(f"New scores update: {json.dumps(current_data, indent=2)}")
+            save_last_data(current_data)  # Save the updated data
             return current_data  # Return the updated data
         else:
             logging.info("No change in data.")
@@ -51,8 +68,10 @@ def check_for_changes(last_data):
 def handler(event, context):
     logging.info("Handler function started.")
     
+    # Load the last data from the file
+    last_data = load_last_data()
+    
     # Run the function to check for changes
-    last_data = None  # Store the previous data to detect changes
     last_data = check_for_changes(last_data)  # Check if the data has changed
     
     return {
