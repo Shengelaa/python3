@@ -1,5 +1,4 @@
 import requests
-import time
 import logging
 import json
 
@@ -9,7 +8,6 @@ logging.basicConfig(level=logging.INFO)
 # Hardcode your Discord Webhook URL directly here
 DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1367789461093613580/v9mKlPyYhbmIAYHGraP7Wt4y2JwOTKFjYVIdyEshUDqmc1quVAOopeCqWUO4OCzsEkid"  # Replace this with your actual Discord webhook URL
 API_URL = 'https://trex-beryl.vercel.app/api/scores'
-CHECK_INTERVAL = 10  # Check every 10 seconds, you can change this if needed
 
 # Function to send a message to Discord
 def send_to_discord(message):
@@ -49,23 +47,14 @@ def check_for_changes(last_data):
     
     return last_data
 
-# Function to send a "test" message to Discord (to check if the bot works)
-def send_test_message():
-    send_to_discord("Test message: The bot is working!")
-
-# Main function to handle the API polling
+# Main function to handle the API polling (this will be triggered by cron)
 def handler(event, context):
     logging.info("Handler function started.")
     
-    # First, let's send a test message to confirm the bot is working
-    send_test_message()  # This will send a "Test message: The bot is working!" to Discord
-    
+    # Run the function to check for changes
     last_data = None  # Store the previous data to detect changes
+    last_data = check_for_changes(last_data)  # Check if the data has changed
     
-    while True:
-        last_data = check_for_changes(last_data)  # Check if the data has changed
-        time.sleep(CHECK_INTERVAL)  # Wait before checking again
-
     return {
         "statusCode": 200,
         "body": "Watching for changes..."
